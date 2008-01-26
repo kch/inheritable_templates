@@ -43,11 +43,11 @@ module InheritableTemplates
     def forgiving_template_exists?(*pieces)
       path = [pieces].flatten.join("/_")
       begin 
-        ext = find_template_extension_for(path)
+        ext = @finder.pick_template_extension(path)
       rescue ::ActionView::ActionViewError
         return false
       end
-      template_exists? path, ext
+      @finder.template_exists? path, ext
     end
   end
   
