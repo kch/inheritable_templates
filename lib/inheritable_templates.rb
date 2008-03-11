@@ -19,36 +19,30 @@ module InheritableTemplates
     end
   end
   
-  module View
+  module PartialTemplate
     def self.included base
       base.alias_method_chain :partial_pieces, :inheritance
-      super
     end
-  
-    def partial_pieces_with_inheritance(partial_path)
-      pieces = partial_pieces_without_inheritance(partial_path)
-      return pieces if forgiving_template_exists?(pieces) || partial_path.include?('/')
+
+    def partial_pieces_with_inheritance(view, partial_path)
+      pieces = partial_pieces_without_inheritance(view, partial_path)
+      return pieces if partial_path.include?('/') || partial_template_exists?(view, *pieces)
       name = pieces.last
       
-      k = controller.class
+      k = view.controller.class
       super_pieces = nil
       while !super_pieces && (k = k.superclass) <= ApplicationController
         path = k.name.underscore.sub(/_controller$/, '')
-        (super_pieces = [path, name]) and next if forgiving_template_exists?(path, name)
+        (super_pieces = [path, name]) and next if partial_template_exists?(view, path, name)
       end
 
       super_pieces || pieces
     end
     
-    def forgiving_template_exists?(*pieces)
-      path = [pieces].flatten.join("/_")
-      begin 
-        ext = @finder.pick_template_extension(path)
-      rescue ::ActionView::ActionViewError
-        return false
-      end
-      @finder.template_exists? path, ext
+    def partial_template_exists?(view, path, name)
+      view.finder.file_exists?("#{path}/_#{name}")
     end
+
   end
   
 end
