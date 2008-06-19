@@ -11,7 +11,7 @@ module InheritableTemplates
       return name if template_exists? name
       k = self.class
       super_name = nil
-      while !super_name && (k = k.superclass) <= ApplicationController
+      while !super_name && (k = k.superclass) < ActionController::Base
         s = k.name.underscore.sub(/_controller$/, "/" + name.split('/').last) 
         (super_name = s) and next if template_exists? s
       end
@@ -21,26 +21,28 @@ module InheritableTemplates
   
   module PartialTemplate
     def self.included base
-      base.alias_method_chain :partial_pieces, :inheritance
+      base.alias_method_chain :initialize, :inheritance
+      base.alias_method_chain :set_path_and_variable_name!, :inheritance
     end
 
-    def partial_pieces_with_inheritance(view, partial_path)
-      pieces = partial_pieces_without_inheritance(view, partial_path)
-      return pieces if partial_path.include?('/') || partial_template_exists?(view, *pieces)
-      name = pieces.last
-      
-      k = view.controller.class
-      super_pieces = nil
-      while !super_pieces && (k = k.superclass) <= ApplicationController
-        path = k.name.underscore.sub(/_controller$/, '')
-        (super_pieces = [path, name]) and next if partial_template_exists?(view, path, name)
+    def initialize_with_inheritance(view, partial_path, object = nil, locals = {})
+      @view = view
+      initialize_without_inheritance(view, partial_path, object, locals)
+    end
+
+    def set_path_and_variable_name_with_inheritance!(partial_path)
+      return set_path_and_variable_name_without_inheritance!(partial_path) if partial_path.include?('/') || !@view_controller
+
+      @variable_name = partial_path
+      k = @view_controller.class
+      while k < ActionController::Base
+        tentative_path = "#{k.controller_path}/_#{@variable_name}"
+        break @path = tentative_path if @view.view_paths.template_exists?(@view.send(:template_file_from_name, tentative_path))
+        k = k.superclass
       end
+      @path ||= "#{@view_controller.controller_path}/_#{@variable_name}"
 
-      super_pieces || pieces
-    end
-    
-    def partial_template_exists?(view, path, name)
-      view.finder.file_exists?("#{path}/_#{name}")
+      @variable_name = @variable_name.sub(/\..*$/, '').to_sym
     end
 
   end
