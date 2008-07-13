@@ -1,2 +1,2 @@
 ActionController::Base.send :include, InheritableTemplates::Controller
-ActionView::PartialTemplate.send :include, InheritableTemplates::PartialTemplate
+ActionView::Partials.send   :include, InheritableTemplates::Partials
