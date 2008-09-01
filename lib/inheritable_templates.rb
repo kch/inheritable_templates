@@ -25,13 +25,17 @@ module InheritableTemplates
   # extends ActionView::Partials
   module Partials
     def self.included base
-      base.alias_method_chain :find_partial_path, :inheritance
+      base.alias_method_chain :_pick_partial_template, :inheritance
     end
 
-    def find_partial_path_with_inheritance(partial_path)
-      path = find_partial_path_without_inheritance(partial_path)
-      return path unless !partial_path.include?('/') && respond_to?(:controller) && !file_exists?(path)
-      InheritableTemplates.find_inherited_template(controller, "_#{partial_path}")
+    def _pick_partial_template_with_inheritance(partial_path)
+      _pick_template case
+      when partial_path.include?('/') then File.join(File.dirname(partial_path), "_#{File.basename(partial_path)}")
+      when respond_to?(:controller) then
+        file_exists?(p = "#{controller.class.controller_path}/_#{partial_path}") && p ||
+          InheritableTemplates.find_inherited_template(controller, "_#{partial_path}")
+      else "_#{partial_path}"
+      end
     end
   end
   
