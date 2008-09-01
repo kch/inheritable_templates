@@ -32,7 +32,7 @@ module InheritableTemplates
       _pick_template case
       when partial_path.include?('/') then File.join(File.dirname(partial_path), "_#{File.basename(partial_path)}")
       when respond_to?(:controller) then
-        file_exists?(p = "#{controller.class.controller_path}/_#{partial_path}") && p ||
+        controller.send(:template_exists?, (p = "#{controller.class.controller_path}/_#{partial_path}")) && p ||
           InheritableTemplates.find_inherited_template(controller, "_#{partial_path}")
       else "_#{partial_path}"
       end
