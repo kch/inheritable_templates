@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module InheritableTemplates
   
   def self.template_exists?(controller, template_name)
