@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
 module InheritableTemplates
-  
+
   def self.template_exists?(controller, template_name)
     begin
       controller.view_paths.find_template(template_name, controller.send(:default_template_format))
@@ -25,7 +25,7 @@ module InheritableTemplates
     def self.included base
       base.alias_method_chain :default_template_name, :inheritance
     end
-  
+
     def default_template_name_with_inheritance(action_name = self.action_name)
       template_name = default_template_name_without_inheritance(action_name)
       return template_name if InheritableTemplates.template_exists?(self, template_name)
@@ -50,5 +50,5 @@ module InheritableTemplates
       self.view_paths.find_template(path, self.template_format)
     end
   end
-  
+
 end
